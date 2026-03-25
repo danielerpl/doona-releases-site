@@ -17,14 +17,13 @@ export async function onRequestGet(context) {
     const ipaPath = context.env.IPA_PATH || 'Releases/BLEPeripheralSimulator/Apps/DoonaPeripheralSimulator.ipa';
     const ipaUrl = `https://bitbucket.org/filotrack/doona-simulator-ios/raw/main/${ipaPath}`;
 
-    const auth = btoa(`x-bitbucket-api-token-auth:${token}`);
-
+    // Bitbucket autenticazione: Bearer Token (modern API token)
     console.log(`📡 URL: ${ipaUrl}`);
-    console.log(`🔐 Auth: Basic ${auth.substring(0, 20)}...`);
+    console.log(`🔐 Auth: Bearer ${token.substring(0, 20)}...`);
 
     const response = await fetch(ipaUrl, {
       headers: {
-        'Authorization': `Basic ${auth}`
+        'Authorization': `Bearer ${token}`
       }
     });
 

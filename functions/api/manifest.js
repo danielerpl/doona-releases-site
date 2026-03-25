@@ -15,15 +15,13 @@ export async function onRequestGet(context) {
     // Recupera il manifest da Bitbucket usando l'endpoint raw
     const manifestUrl = 'https://bitbucket.org/filotrack/doona-simulator-ios/raw/main/Releases/BLEPeripheralSimulator/manifest.plist';
 
-    // Bitbucket autenticazione: Basic con username "x-bitbucket-api-token-auth" e password = token
-    const auth = btoa(`x-bitbucket-api-token-auth:${token}`);
-
+    // Bitbucket autenticazione: Bearer Token (modern API token)
     console.log(`📡 URL: ${manifestUrl}`);
-    console.log(`🔐 Auth: Basic ${auth.substring(0, 20)}...`);
+    console.log(`🔐 Auth: Bearer ${token.substring(0, 20)}...`);
 
     const response = await fetch(manifestUrl, {
       headers: {
-        'Authorization': `Basic ${auth}`
+        'Authorization': `Bearer ${token}`
       }
     });
 
