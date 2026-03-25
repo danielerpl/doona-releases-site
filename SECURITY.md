@@ -171,7 +171,7 @@ This application follows:
 To report security vulnerabilities:
 
 1. **Do NOT** open a public issue
-2. Send details privately to: [your-email@domain.com]
+2. Send details privately to: [daniele.rapali@gmail.com]
 3. Include: description, steps to reproduce, impact assessment
 
 ---
