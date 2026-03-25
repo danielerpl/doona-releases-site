@@ -12,10 +12,10 @@ export async function onRequestGet(context) {
   try {
     console.log('📦 Fetching IPA from Bitbucket...');
     
-    // Recupera l'IPA da Bitbucket usando l'endpoint raw
+    // Recupera l'IPA da Bitbucket usando l'endpoint API (il raw endpoint non supporta Bearer token)
     // Usiamo il percorso specifico tipo: Releases/BLEPeripheralSimulator/Apps/DoonaPeripheralSimulator.ipa
     const ipaPath = context.env.IPA_PATH || 'Releases/BLEPeripheralSimulator/Apps/DoonaPeripheralSimulator.ipa';
-    const ipaUrl = `https://bitbucket.org/filotrack/doona-simulator-ios/raw/main/${ipaPath}`;
+    const ipaUrl = `https://api.bitbucket.org/2.0/repositories/filotrack/doona-simulator-ios/src/main/${ipaPath}`;
 
     // Bitbucket autenticazione: Bearer Token (modern API token)
     console.log(`📡 URL: ${ipaUrl}`);
