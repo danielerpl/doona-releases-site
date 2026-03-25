@@ -18,19 +18,15 @@ export async function onRequestGet(context) {
   try {
     console.log('🔍 Debug: Testing Bitbucket authentication...');
 
-    // Test various Bitbucket endpoints
+    // Test various Bitbucket endpoints with MULTIPLE auth methods
     const endpoints = [
       {
-        name: 'Repository Info',
+        name: 'Repository Info (API)',
         url: 'https://api.bitbucket.org/2.0/repositories/filotrack/doona-simulator-ios'
       },
       {
-        name: 'Whoami',
+        name: 'Whoami (API)',
         url: 'https://api.bitbucket.org/2.0/user'
-      },
-      {
-        name: 'Releases Directory',
-        url: 'https://api.bitbucket.org/2.0/repositories/filotrack/doona-simulator-ios/src/main/Releases/'
       },
       {
         name: 'manifest.plist (raw)',
@@ -40,20 +36,22 @@ export async function onRequestGet(context) {
 
     const results = [];
 
+    // Test 1: Current method (x-bitbucket-api-token-auth)
+    console.log('\n📝 Method 1: x-bitbucket-api-token-auth (current)');
     for (const endpoint of endpoints) {
       try {
         const auth = btoa(`x-bitbucket-api-token-auth:${token}`);
-
         const response = await fetch(endpoint.url, {
-          method: endpoint.url.includes('/raw/') ? 'HEAD' : 'GET',
+          method: 'GET',
           headers: {
             'Authorization': `Basic ${auth}`,
             'Accept': 'application/json'
           },
-          timeout: 10000
+          redirect: 'manual'
         });
 
         results.push({
+          method: 'x-bitbucket-api-token-auth',
           endpoint: endpoint.name,
           url: endpoint.url,
           status: response.status,
@@ -64,15 +62,81 @@ export async function onRequestGet(context) {
         console.log(`  ${endpoint.name}: ${response.status} ${response.ok ? '✅' : '❌'}`);
       } catch (error) {
         results.push({
+          method: 'x-bitbucket-api-token-auth',
           endpoint: endpoint.name,
           url: endpoint.url,
           status: null,
           ok: false,
-          error: error.message
+          error: error.message.substring(0, 100)
         });
 
-        console.log(`  ${endpoint.name}: ❌ ${error.message}`);
+        console.log(`  ${endpoint.name}: ❌ ${error.message.substring(0, 50)}`);
       }
+    }
+
+    // Test 2: Bearer token method
+    console.log('\n📝 Method 2: Bearer Token');
+    try {
+      const response = await fetch('https://api.bitbucket.org/2.0/user', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      results.push({
+        method: 'Bearer',
+        endpoint: 'Whoami (Bearer)',
+        status: response.status,
+        ok: response.ok,
+        statusText: response.statusText
+      });
+
+      console.log(`  Whoami (Bearer): ${response.status} ${response.ok ? '✅' : '❌'}`);
+    } catch (error) {
+      results.push({
+        method: 'Bearer',
+        endpoint: 'Whoami (Bearer)',
+        status: null,
+        ok: false,
+        error: error.message.substring(0, 100)
+      });
+
+      console.log(`  Whoami (Bearer): ❌ ${error.message.substring(0, 50)}`);
+    }
+
+    // Test 3: Token as password with username
+    console.log('\n📝 Method 3: Token as Password (username: filotrack)');
+    try {
+      const auth = btoa(`filotrack:${token}`);
+      const response = await fetch('https://api.bitbucket.org/2.0/user', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Basic ${auth}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      results.push({
+        method: 'Basic (filotrack:token)',
+        endpoint: 'Whoami',
+        status: response.status,
+        ok: response.ok,
+        statusText: response.statusText
+      });
+
+      console.log(`  Whoami (filotrack:token): ${response.status} ${response.ok ? '✅' : '❌'}`);
+    } catch (error) {
+      results.push({
+        method: 'Basic (filotrack:token)',
+        endpoint: 'Whoami',
+        status: null,
+        ok: false,
+        error: error.message.substring(0, 100)
+      });
+
+      console.log(`  Whoami (filotrack:token): ❌ ${error.message.substring(0, 50)}`);
     }
 
     return new Response(
