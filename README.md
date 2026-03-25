@@ -1,174 +1,175 @@
 # Doona Simulator - Distribution Site
 
-Sito statico per l'installazione OTA (Over-The-Air) dell'app iOS Doona Peripheral Simulator.
+Static site for OTA (Over-The-Air) installation of the Doona Peripheral Simulator iOS app through a Cloudflare Workers proxy.
 
-## 📋 Prerequisiti
+## 📋 Prerequisites
 
-- Account Cloudflare con Cloudflare Pages
-- Repository Bitbucket privato con i file di distribuzione
-- Token API Bitbucket (App Password)
+- Cloudflare account with Cloudflare Pages
+- Private Bitbucket repository with release files
+- Bitbucket API token (Bearer Token)
 
-## 🔐 Configurazione Token Bitbucket
+## 🔐 Bitbucket Token Configuration
 
-### Generare un nuovo Token (App Password)
+### Generate a New API Token
 
-1. Accedi a [Bitbucket](https://bitbucket.org)
-2. Vai a **Personal Settings** → **App passwords** 
-3. Clicca **Create app password**
-4. Nome: `Doona Releases`
-5. Permessi: Abilita solo ✅ `Repositories: Read`
-6. **Copia il token** (non potrai vederlo di nuovo!)
+1. Sign in to [Bitbucket](https://bitbucket.org)
+2. Go to **Personal Settings** → **App passwords** 
+3. Click **Create app password**
+4. Name: `Doona Releases`
+5. Permissions: Enable only ✅ `Repositories: Read`
+6. **Copy the token** (you won't be able to see it again!)
 
-### Aggiornare Token su Cloudflare
+### Update Token on Cloudflare
 
-1. Vai su [Cloudflare Dashboard](https://dash.cloudflare.com)
-2. Seleziona **Pages** → `doona-releases-site`
-3. Vai a **Settings** → **Environment variables**
-4. Modifica la variabile `BITBUCKET_TOKEN`:
-   - **Production**: Incolla il nuovo token
-   - **Preview**: (opzionale) Stesso token per testare in preview
-5. Clicca **Save and deploy**
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com)
+2. Select **Pages** → `doona-releases-site`
+3. Go to **Settings** → **Environment variables**
+4. Update the `BITBUCKET_TOKEN` variable:
+   - **Production**: Paste the new token
+   - **Preview**: (optional) Same token for preview testing
+5. Click **Save and deploy**
 
-## 🚀 Deploy su Cloudflare Pages
+## 🚀 Deploy to Cloudflare Pages
 
-### 1. Configurazione iniziale
+### 1. Initial Setup
 
-Se non hai ancora il progetto su Cloudflare:
+If you haven't deployed to Cloudflare yet:
 
-1. Collega il repository GitHub a Cloudflare Pages
-2. Build command: *(vuoto)* (è un sito statico con Workers)
+1. Connect your GitHub repository to Cloudflare Pages
+2. Build command: *(empty)* (static site with Workers functions)
 3. Build output directory: `.` (root)
 
-### 2. Configurazione Variabili d'Ambiente
+### 2. Environment Variables Configuration
 
-Nel dashboard di Cloudflare Pages, vai a **Settings → Environment variables** e aggiungi:
+In the Cloudflare Pages dashboard, go to **Settings → Environment variables** and add:
 
-| Variabile | Valore | Descrizione |
-|-----------|--------|-----------|
-| `BITBUCKET_TOKEN` | `ATATT3x...` | Token API Bitbucket (App Password) |
-| `IPA_PATH` | `Releases/BLEPeripheralSimulator/Apps/DoonaPeripheralSimulator.ipa` | (Opzionale) Percorso IPA. Default: vedi sopra |
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `BITBUCKET_TOKEN` | `ATCTT3x...` | Bitbucket API Bearer Token |
+| `IPA_PATH` | `Releases/BLEPeripheralSimulator/Apps/DoonaPeripheralSimulator.ipa` | (Optional) IPA file path. Default: see above |
 
 ### 3. Deploy
 
-- Commit e push al branch collegato (solitamente `main`)
-- Cloudflare deploierà automaticamente
+- Commit and push to the connected branch (usually `main`)
+- Cloudflare will deploy automatically
 
-## 🧪 Test e Debug
+## 🧪 Testing & Debugging
 
-### Endpoint di Debug
-
-Una volta deployato, puoi testare gli endpoint direttamente:
+### Available Endpoints
 
 ```bash
-# Test configurazione e autenticazione Bitbucket
-curl https://doona-releases-site.pages.dev/api/debug
+# Get current app version and build number
+curl https://doona-releases-site.pages.dev/api/version
+# Returns: {"version":"1.0","build":"1","displayVersion":"1.0 (Build 1)"}
 
-# Test download manifest
+# Download manifest.plist
 curl https://doona-releases-site.pages.dev/api/manifest
 
-# Test download IPA
+# Download IPA binary
 curl https://doona-releases-site.pages.dev/api/ipa -o DoonaPeripheralSimulator.ipa
+
+# Test Bitbucket authentication
+curl https://doona-releases-site.pages.dev/api/debug
 ```
 
-### Debug da Cloudflare Logs
+### Cloudflare Logs
 
-1. Vai su **Cloudflare Dashboard** → **Pages** → `doona-releases-site`
-2. Seleziona **Deployments**
-3. Clicca l'ultimo deployment
-4. **View build logs** per vedere output del build
-5. **View runtime logs** per vedere traffic e errori
+1. Go to **Cloudflare Dashboard** → **Pages** → `doona-releases-site`
+2. Select **Deployments**
+3. Click the latest deployment
+4. **View build logs** to see build output
+5. **View runtime logs** to see traffic and errors
 
-## 📂 Struttura Progetto
+## 📂 Project Structure
 
 ```
 distribution-site/
-├── index.html                  # Pagina principale installazione
+├── index.html                  # Installation landing page
 ├── functions/
 │   ├── api/
-│   │   ├── manifest.js         # GET /api/manifest - Restituisce manifest.plist
-│   │   ├── ipa.js              # GET /api/ipa - Restituisce .ipa
-│   │   └── debug.js            # GET /api/debug - Test autenticazione Bitbucket
-│   └── [_middleware.js]        # (Opzionale) Middleware per CORS
+│   │   ├── manifest.js         # GET /api/manifest - Returns manifest.plist
+│   │   ├── ipa.js              # GET /api/ipa - Returns .ipa binary
+│   │   ├── version.js          # GET /api/version - Returns version info
+│   │   └── debug.js            # GET /api/debug - Bitbucket auth test
+│   └── [_middleware.js]        # (Optional) CORS middleware
 ├── README.md
 └── .gitignore
 ```
 
-## 🔗 Repository Bitbucket
+## 🔗 Bitbucket Repository
 
 - **URL**: https://bitbucket.org/filotrack/doona-simulator-ios/
 - **Files location**: `/Releases/BLEPeripheralSimulator/`
-- **Manifest**: `manifest.plist`
-- **IPA**: `Apps/DoonaPeripheralSimulator.ipa`
+- **Manifest**: `manifest.plist` (OTA manifest with app metadata)
+- **IPA**: `Apps/DoonaPeripheralSimulator.ipa` (main app binary)
+- **Version Info**: `DistributionSummary.plist` (extracted by /api/version)
+
+## 🔄 How It Works
+
+1. **User visits homepage** → Downloads manifest from `/api/manifest`
+2. **Manifest handler** → Fetches from Bitbucket with Bearer token, rewrites URLs to point to `/api/ipa`
+3. **iOS device requests IPA** → `/api/ipa` fetches from Bitbucket and returns binary
+4. **Version display** → `/api/version` reads DistributionSummary.plist to show build info
 
 ## ⚠️ Troubleshooting
 
-### Errore: "Server configuration error: missing BITBUCKET_TOKEN"
+### Error: "Server configuration error: missing BITBUCKET_TOKEN"
 
-❌ **Causa**: Token non configurato nelle variabili d'ambiente di Cloudflare
+❌ **Cause**: Token not configured in Cloudflare environment variables
 
-**Soluzione**:
-1. Vai a **Cloudflare Pages Settings → Environment variables**
-2. Aggiungi `BITBUCKET_TOKEN` con il token da Bitbucket
-3. Redeploy (`git push` o manual deploy)
+**Solution**:
+1. Go to **Cloudflare Pages Settings → Environment variables**
+2. Add `BITBUCKET_TOKEN` with your Bitbucket token
+3. Redeploy (`git push` or manual deploy)
 
-### Errore: "Bitbucket error: 401"
+### Error: "Bitbucket error: 401"
 
-❌ **Causa**: Token invalido o senza permessi
+❌ **Cause**: Invalid or expired token
 
-**Soluzione**:
-1. Verifica il token in Bitbucket → **Personal Settings → App passwords**
-2. Se scaduto o invalido, genera un **nuovo token**
-3. Aggiorna il token su Cloudflare Pages
+**Solution**:
+1. Check token in Bitbucket → **Personal Settings → App passwords**
+2. If expired, generate a **new token**
+3. Update token on Cloudflare Pages
 4. Redeploy
 
-### Errore: "Bitbucket error: 404"
+### Error: "Bitbucket error: 404"
 
-❌ **Causa**: Repository o file non trovati
+❌ **Cause**: Repository or file not found
 
-**Soluzione**:
-1. Verifica che il repository URL sia esatto
-2. Verifica che il percorso dei file sia: `Releases/BLEPeripheralSimulator/`
-3. Controlla il nome esatto di `manifest.plist` e `DoonaPeripheralSimulator.ipa`
-4. Usa l'endpoint `/api/debug` per diagnosticare il problema
+**Solution**:
+1. Verify repository URL is correct
+2. Verify file path: `Releases/BLEPeripheralSimulator/`
+3. Check exact filenames: `manifest.plist` and `DoonaPeripheralSimulator.ipa`
+4. Use `/api/debug` endpoint to diagnose
 
-### Come verificare usando /api/debug
+### Using /api/debug for Diagnosis
 
-Accedi a `https://doona-releases-site.pages.dev/api/debug` e guarda i risultati:
+Visit `https://doona-releases-site.pages.dev/api/debug` and check responses:
 
-```json
-{
-  "results": [
-    {
-      "endpoint": "Repository Info",
-      "status": 200,
-      "ok": true
-    },
-    ...
-  ]
-}
+```
+Status 200 = ✅ OK
+Status 401 = ❌ Token invalid
+Status 404 = ❌ Repository or file not found
 ```
 
-Se lo status è **401**: Token invalido
-Se lo status è **404**: Repository o file non trovato
-Se lo status è **200**: ✅ Tutto OK!
+## 🔐 Security
 
-## 🔐 Sicurezza
+- ✅ Bitbucket token stored **only** in Cloudflare environment variables
+- ✅ Token **never exposed** to client/browser
+- ✅ Cloudflare Workers act as **authenticated proxy**
+- ✅ Files only served with valid Bitbucket authentication
 
-- ✅ Token Bitbucket memorizzato **solo** nelle variabili d'ambiente di Cloudflare
-- ✅ Token **non è mai** esposto al client/browser
-- ✅ Cloudflare Workers agiscono come **proxy autenticato**
-- ✅ File serviti solo con autenticazione valida a Bitbucket
+## 📱 iPhone Installation
 
-## 📱 Installazione su iPhone
+1. Open Safari on iPhone
+2. Visit: https://doona-releases-site.pages.dev
+3. Click **"Install Doona Simulator (Latest Build)"**
+4. Follow on-screen instructions
+5. App installs in background
 
-1. Apri Safari su iPhone
-2. Visita: https://doona-releases-site.pages.dev
-3. Clicca il bottone **"Install Doona Simulator (Latest Build)"**
-4. Segui le istruzioni su schermo
-5. L'app verrà installata in background su iPhone
+## ⚠️ Important Notes
 
-## ⚠️ Note importanti
-
-- L'IPA deve essere firmata con certificato **Ad Hoc** o **Enterprise**.
-- I dispositivi iOS devono essere inclusi nel provisioning profile.
-- Safari è obbligatorio per l'installazione OTA.# doona-releases-site
+- IPA must be signed with **Ad Hoc** or **Enterprise** certificate
+- iOS devices must be included in the provisioning profile
+- Safari is required for OTA installation (itms-services:// protocol)
+- Manifest only supports main IPA (thinned variants removed for simplicity)
