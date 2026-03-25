@@ -12,19 +12,40 @@
             border-radius: 12px; text-decoration: none; font-weight: bold; margin-top: 20px;
         }
         .note { color: #888; font-size: 0.8em; margin-top: 20px; }
+        .version { color: #555; font-size: 0.9em; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="card">
         <h1>Doona Peripheral Simulator</h1>
-        <p>Doona Simulator (Latest Build)</p>
+        <p id="versionText">Loading version...</p>
 
         <!-- URL aggiornato: punta al nostro worker -->
         <a class="btn" href="itms-services://?action=download-manifest&url=https%3A%2F%2Fdoona-releases-site.pages.dev%2Fapi%2Fmanifest"> 
             👉 Install Doona Simulator (Latest Build)
         </a>
 
-        <p class="note">Nota: Richiede <b>Safari</b> su iPhone.</p>
+        <p class="note">Note: You <b>must</b> use <b>Safari</b> on iPhone/iPad</p>
     </div>
+
+    <script>
+        // Fetch the version from the API
+        async function loadVersion() {
+            try {
+                const response = await fetch('/api/version');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('versionText').textContent = `Version ${data.displayVersion}`;
+                } else {
+                    document.getElementById('versionText').textContent = 'Latest Build';
+                }
+            } catch (error) {
+                console.error('Error loading version:', error);
+                document.getElementById('versionText').textContent = 'Latest Build';
+            }
+        }
+
+        loadVersion();
+    </script>
 </body>
 </html>
