@@ -2,19 +2,25 @@ export async function onRequestGet(context) {
   const token = context.env.BITBUCKET_TOKEN;
 
   if (!token) {
-    return new Response('Server configuration error: missing BITBUCKET_TOKEN', {
+    console.error('❌ BITBUCKET_TOKEN not configured');
+    return new Response('Server configuration error: missing BITBUCKET_TOKEN. Configure it in Cloudflare Pages Environment Variables.', {
       status: 500,
       headers: { 'Content-Type': 'text/plain' }
     });
   }
 
   try {
-    // Recupera l'IPA da Bitbucket
+    console.log('📦 Fetching IPA from Bitbucket...');
+    
+    // Recupera l'IPA da Bitbucket usando l'endpoint raw
     // Usiamo il percorso specifico tipo: Releases/BLEPeripheralSimulator/Apps/DoonaPeripheralSimulator.ipa
     const ipaPath = context.env.IPA_PATH || 'Releases/BLEPeripheralSimulator/Apps/DoonaPeripheralSimulator.ipa';
-    const ipaUrl = `https://api.bitbucket.org/2.0/repositories/filotrack/doona-simulator-ios/src/main/${ipaPath}`;
+    const ipaUrl = `https://bitbucket.org/filotrack/doona-simulator-ios/raw/main/${ipaPath}`;
 
     const auth = btoa(`x-bitbucket-api-token-auth:${token}`);
+
+    console.log(`📡 URL: ${ipaUrl}`);
+    console.log(`🔐 Auth: Basic ${auth.substring(0, 20)}...`);
 
     const response = await fetch(ipaUrl, {
       headers: {
@@ -22,8 +28,12 @@ export async function onRequestGet(context) {
       }
     });
 
+    console.log(`📊 Response status: ${response.status}`);
+
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`❌ Bitbucket API error: ${response.status}`);
+      console.error(`Error details: ${errorText.substring(0, 200)}`);
       return new Response(`Bitbucket error: ${response.status} - ${errorText}`, {
         status: response.status,
         headers: { 'Content-Type': 'text/plain' }
@@ -31,6 +41,7 @@ export async function onRequestGet(context) {
     }
 
     const ipaBuffer = await response.arrayBuffer();
+    console.log(`✅ IPA fetched, size: ${ipaBuffer.byteLength} bytes`);
 
     return new Response(ipaBuffer, {
       headers: {

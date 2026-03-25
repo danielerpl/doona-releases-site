@@ -2,18 +2,24 @@ export async function onRequestGet(context) {
   const token = context.env.BITBUCKET_TOKEN;
 
   if (!token) {
-    return new Response('Server configuration error: missing BITBUCKET_TOKEN', {
+    console.error('❌ BITBUCKET_TOKEN not configured');
+    return new Response('Server configuration error: missing BITBUCKET_TOKEN. Configure it in Cloudflare Pages Environment Variables.', {
       status: 500,
       headers: { 'Content-Type': 'text/plain' }
     });
   }
 
   try {
-    // Recupera il manifest da Bitbucket
-    const manifestUrl = 'https://api.bitbucket.org/2.0/repositories/filotrack/doona-simulator-ios/src/main/Releases/BLEPeripheralSimulator/manifest.plist';
+    console.log('📋 Fetching manifest.plist from Bitbucket...');
+    
+    // Recupera il manifest da Bitbucket usando l'endpoint raw
+    const manifestUrl = 'https://bitbucket.org/filotrack/doona-simulator-ios/raw/main/Releases/BLEPeripheralSimulator/manifest.plist';
 
-    // Bitbucket API autenticazione: Basic con username "x-bitbucket-api-token-auth" e password = token
+    // Bitbucket autenticazione: Basic con username "x-bitbucket-api-token-auth" e password = token
     const auth = btoa(`x-bitbucket-api-token-auth:${token}`);
+
+    console.log(`📡 URL: ${manifestUrl}`);
+    console.log(`🔐 Auth: Basic ${auth.substring(0, 20)}...`);
 
     const response = await fetch(manifestUrl, {
       headers: {
@@ -21,8 +27,12 @@ export async function onRequestGet(context) {
       }
     });
 
+    console.log(`📊 Response status: ${response.status}`);
+
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`❌ Bitbucket API error: ${response.status}`);
+      console.error(`Error details: ${errorText.substring(0, 200)}`);
       return new Response(`Bitbucket error: ${response.status} - ${errorText}`, {
         status: response.status,
         headers: { 'Content-Type': 'text/plain' }
@@ -31,6 +41,7 @@ export async function onRequestGet(context) {
 
     // Leggi il contenuto del manifest
     const manifestContent = await response.text();
+    console.log(`✅ Manifest fetched, size: ${manifestContent.length} bytes`);
 
     // Modifica l'URL dell'IPA nel manifest per puntare al nostro endpoint /api/ipa
     // Cerca l'asset di tipo software-package e sostituisce l'URL
